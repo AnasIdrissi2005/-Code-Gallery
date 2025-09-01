@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="adminTitle">لوحة التحكم - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Tajawal', 'Inter', sans-serif;
+        }
+        
+        body {
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        body.ltr {
+            direction: ltr;
+        }
+        
+        body.ltr .ml-2 {
+            margin-left: 0;
+            margin-right: 0.5rem;
+        }
+        
+        body.ltr .mr-2 {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+        
+        body.ltr .space-x-reverse {
+            space-x-reverse: normal;
+        }
+        
+        body.ltr .flex-row-reverse {
+            flex-direction: row;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .admin-container {
+            display: none;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+        
+        .admin-sidebar {
+            background: white;
+            width: 250px;
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .admin-main {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: white;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+        
+        .code-input-area {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #374151;
+            border-right-color: #3b82f6;
+        }
+        
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-right-color: #3b82f6;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .code-item {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .code-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .back-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #6b7280;
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: #4b5563;
+            transform: scale(1.1);
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+
+        .lang-btn {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div id="loginContainer" class="login-container">
+        <div class="lang-switcher">
+            <button class="lang-btn active" data-lang="ar" onclick="changeLanguage('ar')">العربية</button>
+            <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">English</button>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <i class="fas fa-cog text-5xl text-purple-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800" data-translate="adminPanel">لوحة التحكم</h2>
+                <p class="text-gray-600 mt-2" data-translate="loginDesc">تسجيل الدخول للوصول إلى لوحة التحكم</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="password">كلمة المرور</label>
+                    <input type="password" id="adminPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" data-translate="passwordPlaceholder" placeholder="أدخل كلمة المرور" required>
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-medium">
+                    <i class="fas fa-sign-in-alt ml-2"></i>
+                    <span data-translate="login">دخول</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Container -->
+    <div id="adminContainer" class="admin-container">
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        <i class="fas fa-cog ml-2 text-purple-600"></i>
+                        <span data-translate="adminPanel">لوحة التحكم</span>
+                    </h3>
+                </div>
+                <nav class="mt-6">
+                    <a href="#" class="sidebar-item active" onclick="showSection('upload')">
+                        <i class="fas fa-upload"></i>
+                        <span data-translate="uploadFiles">تحميل الملفات</span>
+                    </a>
+                    <a href="#" class="sidebar-item" onclick="showSection('add')">
+                        <i class="fas fa-plus"></i>
+                        <span data-translate="addCode">إضافة كود</span>
+                    </a>
+                    <a href="#" class="sidebar-item" onclick="showSection('manage')">
+                        <i class="fas fa-list"></i>
+                        <span data-translate="manageCodes">إدارة الكودات</span>
+                    </a>
+                    <a href="#" class="sidebar-item" onclick="showSection('stats')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span data-translate="statistics">الإحصائيات</span>
+                    </a>
+                </nav>
+                
+                <div class="absolute bottom-0 w-full p-6 border-t">
+                    <button onclick="logout()" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        <span data-translate="logout">تسجيل الخروج</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="admin-main">
+                <!-- Upload Section -->
+                <section id="uploadSection" class="content-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2" data-translate="uploadFiles">تحميل الملفات</h2>
+                        <p class="text-gray-600" data-translate="uploadDesc">اسحب وأفلت الملفات أو انقر للاختيار</p>
+                    </div>
+                    
+                    <div class="file-upload-area" id="dropZone">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2" data-translate="dragDrop">تحميل الملفات</h3>
+                        <p class="text-gray-500 mb-1" data-translate="dragDropDesc">اسحب وأفلت الملفات هنا أو انقر للاختيار</p>
+                        <p class="text-sm text-gray-400" data-translate="supportedFiles">يدعم: .html, .css, .js, .txt, .json</p>
+                        <input type="file" id="fileInput" multiple accept=".html,.css,.js,.txt,.json" style="display: none;">
+                    </div>
+                    
+                    <div id="uploadedFiles" class="mt-6 space-y-3"></div>
+                </section>
+
+                <!-- Add Code Section -->
+                <section id="addSection" class="content-section" style="display: none;">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2" data-translate="addNewCode">إضافة كود جديد</h2>
+                        <p class="text-gray-600" data-translate="addCodeDesc">أضف كوداً يدوياً إلى المعرض</p>
+                    </div>
+                    
+                    <div class="code-input-area">
+                        <form onsubmit="handleAddCode(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="title">العنوان</label>
+                                    <input type="text" id="codeTitle" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" data-translate="titlePlaceholder" placeholder="أدخل عنوان الكود" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="language">اللغة</label>
+                                    <select id="codeLanguage" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                        <option value="html">HTML</option>
+                                        <option value="css">CSS</option>
+                                        <option value="javascript">JavaScript</option>
+                                        <option value="mixed" data-translate="mixed">مختلط</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-translate="code">الكود</label>
+                                <textarea id="codeContent" rows="15" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 font-mono text-sm" data-translate="codePlaceholder" placeholder="أدخل الكود هنا..." required></textarea>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                                    <i class="fas fa-save ml-2"></i>
+                                    <span data-translate="saveCode">حفظ الكود</span>
+                                </button>
+                                <button type="button" onclick="clearForm()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+                                    <i class="fas fa-eraser ml-2"></i>
+                                    <span data-translate="clear">مسح</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Manage Section -->
+                <section id="manageSection" class="content-section" style="display: none;">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2" data-translate="manageCodes">إدارة الكودات</h2>
+                        <p class="text-gray-600" data-translate="manageDesc">عرض وحذف الكودات المحفوظة</p>
+                    </div>
+                    
+                    <div id="manageCodesList" class="space-y-3">
+                        <!-- Code items will be inserted here -->
+                    </div>
+                </section>
+
+                <!-- Stats Section -->
+                <section id="statsSection" class="content-section" style="display: none;">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2" data-translate="statistics">الإحصائيات</h2>
+                        <p class="text-gray-600" data-translate="statsDesc">نظرة عامة على الكودات في المعرض</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="stats-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold text-gray-800" id="statsTotal">0</div>
+                                    <div class="text-sm text-gray-600" data-translate="totalCodes">إجمالي الكودات</div>
+                                </div>
+                                <i class="fas fa-code text-3xl text-purple-600"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold text-orange-600" id="statsHtml">0</div>
+                                    <div class="text-sm text-gray-600">HTML</div>
+                                </div>
+                                <i class="fab fa-html5 text-3xl text-orange-500"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold text-blue-600" id="statsCss">0</div>
+                                    <div class="text-sm text-gray-600">CSS</div>
+                                </div>
+                                <i class="fab fa-css3-alt text-3xl text-blue-500"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold text-yellow-600" id="statsJs">0</div>
+                                    <div class="text-sm text-gray-600">JavaScript</div>
+                                </div>
+                                <i class="fab fa-js-square text-3xl text-yellow-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-6 shadow">
+                        <h3 class="text-lg font-semibold mb-4" data-translate="recentActivity">آخر النشاطات</h3>
+                        <div id="recentActivity" class="space-y-3">
+                            <!-- Recent activity will be shown here -->
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Back Link -->
+    <a href="index.html" class="back-link" data-translate="backToGallery" title="العودة للمعرض">
+        <i class="fas fa-arrow-left text-xl"></i>
+    </a>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            ar: {
+                adminTitle: "لوحة التحكم - Admin Panel",
+                adminPanel: "لوحة التحكم",
+                loginDesc: "تسجيل الدخول للوصول إلى لوحة التحكم",
+                password: "كلمة المرور",
+                passwordPlaceholder: "أدخل كلمة المرور",
+                login: "دخول",
+                uploadFiles: "تحميل الملفات",
+                uploadDesc: "اسحب وأفلت الملفات أو انقر للاختيار",
+                dragDrop: "تحميل الملفات",
+                dragDropDesc: "اسحب وأفلت الملفات هنا أو انقر للاختيار",
+                supportedFiles: "يدعم: .html, .css, .js, .txt, .json",
+                addNewCode: "إضافة كود جديد",
+                addCode: "إضافة كود",
+                addCodeDesc: "أضف كوداً يدوياً إلى المعرض",
+                title: "العنوان",
+                titlePlaceholder: "أدخل عنوان الكود",
+                language: "اللغة",
+                mixed: "مختلط",
+                code: "الكود",
+                codePlaceholder: "أدخل الكود هنا...",
+                saveCode: "حفظ الكود",
+                clear: "مسح",
+                manageCodes: "إدارة الكودات",
+                manageDesc: "عرض وحذف الكودات المحفوظة",
+                statistics: "الإحصائيات",
+                statsDesc: "نظرة عامة على الكودات في المعرض",
+                totalCodes: "إجمالي الكودات",
+                recentActivity: "آخر النشاطات",
+                logout: "تسجيل الخروج",
+                backToGallery: "العودة للمعرض",
+                loginSuccess: "تم تسجيل الدخول بنجاح",
+                wrongPassword: "كلمة المرور غير صحيحة",
+                uploaded: "تم تحميل",
+                added: "تمت إضافة",
+                deleted: "تم حذف",
+                copied: "تم نسخ",
+                view: "عرض",
+                delete: "حذف",
+                confirmDelete: "هل أنت متأكد من حذف هذا الكود؟",
+                noActivity: "لا يوجد نشاط حديث",
+                fileNotSupported: "نوع الملف غير مدعوم",
+                html: "HTML",
+                css: "CSS",
+                javascript: "JavaScript",
+                mixed: "مختلط",
+                characters: "حرف",
+                lastUpdate: "آخر تحديث",
+                now: "الآن",
+                minutesAgo: "منذ {minutes} دقيقة",
+                hoursAgo: "منذ {hours} ساعة",
+                daysAgo: "منذ {days} يوم"
+            },
+            en: {
+                adminTitle: "Admin Panel - لوحة التحكم",
+                adminPanel: "Admin Panel",
+                loginDesc: "Login to access the admin panel",
+                password: "Password",
+                passwordPlaceholder: "Enter password",
+                login: "Login",
+                uploadFiles: "Upload Files",
+                uploadDesc: "Drag and drop files or click to select",
+                dragDrop: "Upload Files",
+                dragDropDesc: "Drag and drop files here or click to select",
+                supportedFiles: "Supports: .html, .css, .js, .txt, .json",
+                addNewCode: "Add New Code",
+                addCode: "Add Code",
+                addCodeDesc: "Add a code manually to the gallery",
+                title: "Title",
+                titlePlaceholder: "Enter code title",
+                language: "Language",
+                mixed: "Mixed",
+                code: "Code",
+                codePlaceholder: "Enter code here...",
+                saveCode: "Save Code",
+                clear: "Clear",
+                manageCodes: "Manage Codes",
+                manageDesc: "View and delete saved codes",
+                statistics: "Statistics",
+                statsDesc: "Overview of codes in the gallery",
+                totalCodes: "Total Codes",
+                recentActivity: "Recent Activity",
+                logout: "Logout",
+                backToGallery: "Back to Gallery",
+                loginSuccess: "Login successful",
+                wrongPassword: "Wrong password",
+                uploaded: "Uploaded",
+                added: "Added",
+                deleted: "Deleted",
+                copied: "Copied",
+                view: "View",
+                delete: "Delete",
+                confirmDelete: "Are you sure you want to delete this code?",
+                noActivity: "No recent activity",
+                fileNotSupported: "File type not supported",
+                html: "HTML",
+                css: "CSS",
+                javascript: "JavaScript",
+                mixed: "Mixed",
+                characters: "characters",
+                lastUpdate: "Last update",
+                now: "Now",
+                minutesAgo: "{minutes} minutes ago",
+                hoursAgo: "{hours} hours ago",
+                daysAgo: "{days} days ago"
+            }
+        };
+
+        // Initialize
+        let codes = JSON.parse(localStorage.getItem('codeGallery')) || [];
+        let isAdmin = false;
+        let currentLanguage = localStorage.getItem('language') || 'ar';
+        
+        // Admin password (in real app, use proper authentication)
+        const ADMIN_PASSWORD = 'A114119s@@';
+
+        // DOM Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const adminContainer = document.getElementById('adminContainer');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedFiles = document.getElementById('uploadedFiles');
+        const manageCodesList = document.getElementById('manageCodesList');
+        const recentActivity = document.getElementById('recentActivity');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // Initialize language
+        function initializeLanguage() {
+            document.documentElement.lang = currentLanguage;
+            if (currentLanguage === 'en') {
+                document.body.classList.add('ltr');
+                document.body.dir = 'ltr';
+            } else {
+                document.body.classList.remove('ltr');
+                document.body.dir = 'rtl';
+            }
+            updateTranslations();
+            updateLangButtons();
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            initializeLanguage();
+        }
+
+        function updateLangButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
+            });
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.placeholder = translations[currentLanguage][key];
+                }
+            });
+        }
+
+        // File upload events
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Functions
+        function handleLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                isAdmin = true;
+                loginContainer.style.display = 'none';
+                adminContainer.style.display = 'block';
+                updateStats();
+                renderManageCodes();
+                showToast(translations[currentLanguage].loginSuccess);
+            } else {
+                showToast(translations[currentLanguage].wrongPassword, 'error');
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            loginContainer.style.display = 'flex';
+            adminContainer.style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+            showToast(translations[currentLanguage].logout);
+        }
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+            event.target.closest('.sidebar-item').classList.add('active');
+            
+            if (sectionName === 'stats') {
+                updateStats();
+                renderRecentActivity();
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            processFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            uploadedFiles.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                if (isValidFile(file)) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        const language = detectLanguage(file.name, content);
+                        
+                        const newCode = {
+                            id: Date.now() + Math.random(),
+                            title: file.name.replace(/\.[^/.]+$/, ''),
+                            language: language,
+                            code: content,
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        codes.unshift(newCode);
+                        localStorage.setItem('codeGallery', JSON.stringify(codes));
+                        
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'bg-green-50 border border-green-200 rounded p-3 fade-in';
+                        fileItem.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-check-circle text-green-600"></i>
+                                    <div>
+                                        <div class="font-medium">${file.name}</div>
+                                        <div class="text-sm text-gray-600">${language.toUpperCase()}</div>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-gray-500">${formatFileSize(file.size)}</span>
+                            </div>
+                        `;
+                        uploadedFiles.appendChild(fileItem);
+                        
+                        showToast(`${translations[currentLanguage].uploaded} ${file.name}`);
+                        
+                        // Trigger update in gallery
+                        triggerGalleryUpdate();
+                    };
+                    
+                    reader.readAsText(file);
+                } else {
+                    showToast(`${translations[currentLanguage].fileNotSupported} ${file.name}`, 'error');
+                }
+            });
+        }
+
+        function handleAddCode(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('codeTitle').value;
+            const language = document.getElementById('codeLanguage').value;
+            const content = document.getElementById('codeContent').value;
+            
+            const newCode = {
+                id: Date.now(),
+                title: title,
+                language: language,
+                code: content,
+                createdAt: new Date().toISOString()
+            };
+            
+            codes.unshift(newCode);
+            localStorage.setItem('codeGallery', JSON.stringify(codes));
+            
+            clearForm();
+            showToast(translations[currentLanguage].added);
+            
+            // Trigger update in gallery
+            triggerGalleryUpdate();
+        }
+
+        function clearForm() {
+            document.getElementById('codeTitle').value = '';
+            document.getElementById('codeLanguage').value = 'html';
+            document.getElementById('codeContent').value = '';
+        }
+
+        function renderManageCodes() {
+            manageCodesList.innerHTML = '';
+            
+            if (codes.length === 0) {
+                manageCodesList.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-4xl mb-2"></i><p data-translate="noActivity">' + translations[currentLanguage].noActivity + '</p></div>';
+                return;
+            }
+            
+            codes.forEach(code => {
+                const codeItem = document.createElement('div');
+                codeItem.className = 'code-item fade-in';
+                codeItem.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="font-medium">${code.title}</h4>
+                                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                                    ${code.language.toUpperCase()}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                <i class="far fa-clock ml-1"></i>
+                                ${formatDate(code.createdAt)}
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">
+                                ${code.code.length} ${translations[currentLanguage].characters}
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="viewCode(${code.id})" class="text-blue-600 hover:text-blue-700" title="${translations[currentLanguage].view}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteCode(${code.id})" class="text-red-600 hover:text-red-700" title="${translations[currentLanguage].delete}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                manageCodesList.appendChild(codeItem);
+            });
+        }
+
+        function viewCode(id) {
+            const code = codes.find(c => c.id === id);
+            if (code) {
+                window.open(`gallery.html?code=${id}`, '_blank');
+            }
+        }
+
+        function deleteCode(id) {
+            if (confirm(translations[currentLanguage].confirmDelete)) {
+                codes = codes.filter(c => c.id !== id);
+                localStorage.setItem('codeGallery', JSON.stringify(codes));
+                renderManageCodes();
+                showToast(translations[currentLanguage].deleted);
+                
+                // Trigger update in gallery
+                triggerGalleryUpdate();
+            }
+        }
+
+        function updateStats() {
+            const stats = {
+                total: codes.length,
+                html: codes.filter(c => c.language === 'html').length,
+                css: codes.filter(c => c.language === 'css').length,
+                javascript: codes.filter(c => c.language === 'javascript').length
+            };
+            
+            document.getElementById('statsTotal').textContent = stats.total;
+            document.getElementById('statsHtml').textContent = stats.html;
+            document.getElementById('statsCss').textContent = stats.css;
+            document.getElementById('statsJs').textContent = stats.javascript;
+        }
+
+        function renderRecentActivity() {
+            recentActivity.innerHTML = '';
+            
+            const recentCodes = codes.slice(0, 5);
+            
+            if (recentCodes.length === 0) {
+                recentActivity.innerHTML = '<p class="text-gray-500" data-translate="noActivity">' + translations[currentLanguage].noActivity + '</p>';
+                return;
+            }
+            
+            recentCodes.forEach(code => {
+                const activityItem = document.createElement('div');
+                activityItem.className = 'flex items-center justify-between py-2 border-b border-gray-100';
+                activityItem.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-plus-circle text-green-600"></i>
+                        <div>
+                            <div class="font-medium text-sm">${code.title}</div>
+                            <div class="text-xs text-gray-500">${code.language.toUpperCase()}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">${formatDate(code.createdAt, true)}</div>
+                `;
+                recentActivity.appendChild(activityItem);
+            });
+        }
+
+        function triggerGalleryUpdate() {
+            // Trigger storage event for gallery page
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'codeGallery',
+                newValue: localStorage.getItem('codeGallery'),
+                url: window.location.href
+            }));
+            
+            // Also try postMessage for cross-window communication
+            if (window.opener) {
+                window.opener.postMessage({type: 'adminUpdate'}, '*');
+            }
+        }
+
+        function isValidFile(file) {
+            const validTypes = ['text/html', 'text/css', 'text/javascript', 'text/plain', 'application/json'];
+            const validExtensions = ['.html', '.css', '.js', '.txt', '.json'];
+            
+            return validTypes.includes(file.type) || 
+                   validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+        }
+
+        function detectLanguage(filename, content) {
+            const name = filename.toLowerCase();
+            
+            if (name.endsWith('.html')) return 'html';
+            if (name.endsWith('.css')) return 'css';
+            if (name.endsWith('.js')) return 'javascript';
+            
+            if (content.includes('<!DOCTYPE html') || content.includes('<html')) return 'html';
+            if (content.includes('{') && content.includes('}') && content.includes(':')) {
+                if (content.includes('function') || content.includes('var ') || content.includes('let ')) {
+                    return 'javascript';
+                }
+                return 'css';
+            }
+            
+            return 'html';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateString, short = false) {
+            const date = new Date(dateString);
+            if (short) {
+                return date.toLocaleDateString(currentLanguage === 'ar' ? 'ar-SA' : 'en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString(currentLanguage === 'ar' ? 'ar-SA' : 'en-US', options);
+        }
+
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        initializeLanguage();
+        
+        if (isAdmin) {
+            loginContainer.style.display = 'none';
+            adminContainer.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

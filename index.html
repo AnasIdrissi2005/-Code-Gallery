@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="title">معرض الكودات - Code Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Tajawal', 'Inter', sans-serif;
+        }
+        
+        body {
+            transition: background-color 0.3s ease;
+        }
+        
+        body.ltr {
+            direction: ltr;
+        }
+        
+        body.ltr .ml-2 {
+            margin-left: 0;
+            margin-right: 0.5rem;
+        }
+        
+        body.ltr .mr-2 {
+            margin-right: 0;
+            margin-left: 0.5rem;
+        }
+        
+        body.ltr .space-x-reverse {
+            space-x-reverse: normal;
+        }
+        
+        body.ltr .flex-row-reverse {
+            flex-direction: row;
+        }
+        
+        .code-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .code-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            border-color: #3b82f6;
+        }
+        
+        .code-card.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .dark-mode .code-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        
+        .dark-mode .code-card:hover {
+            border-color: #3b82f6;
+            background: #1e3a8a;
+        }
+        
+        .dark-mode .code-card.active {
+            background: #1e3a8a;
+        }
+        
+        .code-display {
+            background: #2d3748;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .dark-mode .code-display {
+            background: #1a202c;
+        }
+        
+        .preview-frame {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            min-height: 400px;
+            width: 100%;
+            background: white;
+        }
+        
+        .dark-mode .preview-frame {
+            border-color: #374151;
+            background: #1f2937;
+        }
+        
+        .language-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .html-badge {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .css-badge {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .js-badge {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .mixed-badge {
+            background: #e9d5ff;
+            color: #6b21a8;
+        }
+        
+        .dark-mode .html-badge {
+            background: #92400e;
+            color: #fef3c7;
+        }
+        
+        .dark-mode .css-badge {
+            background: #1e40af;
+            color: #dbeafe;
+        }
+        
+        .dark-mode .js-badge {
+            background: #92400e;
+            color: #fef3c7;
+        }
+        
+        .dark-mode .mixed-badge {
+            background: #6b21a8;
+            color: #e9d5ff;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .dark-mode .empty-state {
+            color: #9ca3af;
+        }
+        
+        /* Prism.js customization */
+        pre[class*="language-"] {
+            margin: 0;
+            padding: 1.5rem;
+            background: transparent;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .dark-mode pre[class*="language-"] {
+            background: transparent;
+        }
+        
+        code[class*="language-"] {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 0.375rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .sync-indicator {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .sync-indicator.show {
+            display: flex;
+        }
+
+        .sync-indicator.syncing {
+            background: #f59e0b;
+        }
+
+        .sync-indicator i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+        }
+
+        .lang-btn {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: #e5e7eb;
+        }
+
+        .dark-mode .lang-btn:hover:not(.active) {
+            background: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-code text-2xl text-blue-600"></i>
+                    <h1 class="text-xl font-bold text-gray-800" data-translate="mainTitle">معرض الكودات</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="lang-switcher">
+                        <button class="lang-btn active" data-lang="ar" onclick="changeLanguage('ar')">العربية</button>
+                        <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">English</button>
+                    </div>
+                    <button id="refreshBtn" class="p-2 rounded-lg hover:bg-gray-100 transition" title="تحديث">
+                        <i class="fas fa-sync-alt text-gray-600"></i>
+                    </button>
+                    <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 transition" title="الوضع المظلم">
+                        <i class="fas fa-moon text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sync Indicator -->
+    <div id="syncIndicator" class="sync-indicator">
+        <i class="fas fa-sync-alt"></i>
+        <span data-translate="syncing">جاري تحديث البيانات...</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Stats Section -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="stats-card">
+                <div class="stats-number" id="totalCodes">0</div>
+                <div class="text-sm opacity-90" data-translate="totalCodes">إجمالي الكودات</div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-orange-600" id="htmlCount">0</div>
+                        <div class="text-sm text-gray-600">HTML</div>
+                    </div>
+                    <i class="fab fa-html5 text-3xl text-orange-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600" id="cssCount">0</div>
+                        <div class="text-sm text-gray-600">CSS</div>
+                    </div>
+                    <i class="fab fa-css3-alt text-3xl text-blue-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-600" id="jsCount">0</div>
+                        <div class="text-sm text-gray-600">JavaScript</div>
+                    </div>
+                    <i class="fab fa-js-square text-3xl text-yellow-500"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Code Gallery -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-gray-700">
+                            <i class="fas fa-th-large ml-2"></i>
+                            <span data-translate="codeGallery">معرض الكودات</span>
+                        </h3>
+                        <button id="manualRefresh" class="text-blue-600 hover:text-blue-700 text-sm" title="تحديث">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div id="codeGallery" class="space-y-3 max-h-[600px] overflow-y-auto">
+                        <!-- Code cards will be inserted here -->
+                    </div>
+                    <div id="emptyState" class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <h3 class="font-medium mb-1" data-translate="noCodes">لا توجد كودات</h3>
+                        <p class="text-sm" data-translate="adminShouldAdd">يجب على المسؤول إضافة كودات</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Code Display and Preview -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Code Display -->
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-700">
+                            <i class="fas fa-code ml-2"></i>
+                            <span data-translate="code">الكود</span>
+                        </h3>
+                        <div id="codeInfo" class="flex items-center gap-2 text-sm text-gray-500">
+                            <span data-translate="selectCode">اختر كوداً لعرضه</span>
+                        </div>
+                    </div>
+                    <div id="codeDisplay" class="code-display">
+                        <div class="flex items-center justify-center h-64 text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-mouse-pointer text-4xl mb-2"></i>
+                                <p data-translate="clickToSelect">اختر كوداً من المعرض لعرضه هنا</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview -->
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-700">
+                            <i class="fas fa-eye ml-2"></i>
+                            <span data-translate="preview">المعاينة</span>
+                        </h3>
+                        <span id="previewStatus" class="text-sm text-gray-500" data-translate="ready">جاهز</span>
+                    </div>
+                    <iframe id="previewFrame" class="preview-frame"></iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            ar: {
+                title: "معرض الكودات - Code Gallery",
+                mainTitle: "معرض الكودات",
+                syncing: "جاري تحديث البيانات...",
+                totalCodes: "إجمالي الكودات",
+                codeGallery: "معرض الكودات",
+                noCodes: "لا توجد كودات",
+                adminShouldAdd: "يجب على المسؤول إضافة كودات",
+                code: "الكود",
+                selectCode: "اختر كوداً لعرضه",
+                clickToSelect: "اختر كوداً من المعرض لعرضه هنا",
+                preview: "المعاينة",
+                ready: "جاهز",
+                adminPanel: "لوحة التحكم",
+                copied: "تم نسخ الكود إلى الحافظة",
+                updated: "تم تحديث البيانات",
+                running: "جاري التشغيل...",
+                ran: "تم التشغيل",
+                html: "HTML",
+                css: "CSS",
+                javascript: "JavaScript",
+                mixed: "مختلط",
+                loading: "تحميل...",
+                error: "خطأ",
+                noCodesFound: "لا توجد كودات",
+                lastUpdate: "آخر تحديث",
+                now: "الآن",
+                minutesAgo: "منذ {minutes} دقيقة",
+                hoursAgo: "منذ {hours} ساعة",
+                daysAgo: "منذ {days} يوم"
+            },
+            en: {
+                title: "Code Gallery - معرض الكودات",
+                mainTitle: "Code Gallery",
+                syncing: "Updating data...",
+                totalCodes: "Total Codes",
+                codeGallery: "Code Gallery",
+                noCodes: "No codes available",
+                adminShouldAdd: "Admin should add codes",
+                code: "Code",
+                selectCode: "Select a code to display",
+                clickToSelect: "Select a code from the gallery to display it here",
+                preview: "Preview",
+                ready: "Ready",
+                adminPanel: "Admin Panel",
+                copied: "Code copied to clipboard",
+                updated: "Data updated",
+                running: "Running...",
+                ran: "Ran",
+                html: "HTML",
+                css: "CSS",
+                javascript: "JavaScript",
+                mixed: "Mixed",
+                loading: "Loading...",
+                error: "Error",
+                noCodesFound: "No codes found",
+                lastUpdate: "Last update",
+                now: "Now",
+                minutesAgo: "{minutes} minutes ago",
+                hoursAgo: "{hours} hours ago",
+                daysAgo: "{days} days ago"
+            }
+        };
+
+        // Initialize
+        let codes = JSON.parse(localStorage.getItem('codeGallery')) || [];
+        let selectedCode = null;
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        let currentLanguage = localStorage.getItem('language') || 'ar';
+        let lastUpdateTime = Date.now();
+        let syncInterval;
+
+        // DOM Elements
+        const codeGallery = document.getElementById('codeGallery');
+        const codeDisplay = document.getElementById('codeDisplay');
+        const codeInfo = document.getElementById('codeInfo');
+        const previewFrame = document.getElementById('previewFrame');
+        const previewStatus = document.getElementById('previewStatus');
+        const emptyState = document.getElementById('emptyState');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const manualRefresh = document.getElementById('manualRefresh');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const syncIndicator = document.getElementById('syncIndicator');
+
+        // Stats elements
+        const totalCodesEl = document.getElementById('totalCodes');
+        const htmlCount = document.getElementById('htmlCount');
+        const cssCount = document.getElementById('cssCount');
+        const jsCount = document.getElementById('jsCount');
+
+        // Initialize language
+        function initializeLanguage() {
+            document.documentElement.lang = currentLanguage;
+            if (currentLanguage === 'en') {
+                document.body.classList.add('ltr');
+                document.body.dir = 'ltr';
+            } else {
+                document.body.classList.remove('ltr');
+                document.body.dir = 'rtl';
+            }
+            updateTranslations();
+            updateLangButtons();
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            initializeLanguage();
+        }
+
+        function updateLangButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
+            });
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+        }
+
+        // Initialize dark mode
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun text-yellow-400"></i>';
+        }
+
+        // Event Listeners
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        refreshBtn.addEventListener('click', () => {
+            if (selectedCode) {
+                runCode(selectedCode);
+            }
+        });
+        manualRefresh.addEventListener('click', forceRefresh);
+
+        // Sync Mechanisms
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'codeGallery') {
+                refreshData();
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            refreshData();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                refreshData();
+            }
+        });
+
+        syncInterval = setInterval(() => {
+            checkForUpdates();
+        }, 2000);
+
+        window.addEventListener('adminUpdate', (e) => {
+            refreshData();
+        });
+
+        // Functions
+        function checkForUpdates() {
+            try {
+                const currentData = localStorage.getItem('codeGallery');
+                const currentHash = btoa(currentData || '');
+                const storedHash = localStorage.getItem('codeGalleryHash') || '';
+                
+                if (currentHash !== storedHash) {
+                    refreshData();
+                    localStorage.setItem('codeGalleryHash', currentHash);
+                }
+            } catch (error) {
+                console.error('Error checking for updates:', error);
+            }
+        }
+
+        function refreshData() {
+            showSyncIndicator();
+            
+            setTimeout(() => {
+                try {
+                    const newCodes = JSON.parse(localStorage.getItem('codeGallery')) || [];
+                    
+                    if (JSON.stringify(newCodes) !== JSON.stringify(codes)) {
+                        codes = newCodes;
+                        renderCodeGallery();
+                        
+                        if (selectedCode) {
+                            const stillExists = codes.find(c => c.id === selectedCode.id);
+                            if (stillExists) {
+                                selectCode(selectedCode.id);
+                            } else {
+                                if (codes.length > 0) {
+                                    selectCode(codes[0].id);
+                                }
+                            }
+                        } else if (codes.length > 0) {
+                            selectCode(codes[0].id);
+                        }
+                        
+                        showToast(translations[currentLanguage].updated);
+                    }
+                } catch (error) {
+                    console.error('Error refreshing data:', error);
+                    showToast(translations[currentLanguage].error, 'error');
+                }
+                
+                hideSyncIndicator();
+            }, 500);
+        }
+
+        function forceRefresh() {
+            refreshData();
+        }
+
+        function showSyncIndicator() {
+            syncIndicator.classList.add('show', 'syncing');
+        }
+
+        function hideSyncIndicator() {
+            syncIndicator.classList.remove('syncing');
+            setTimeout(() => {
+                syncIndicator.classList.remove('show');
+            }, 1000);
+        }
+
+        function renderCodeGallery() {
+            codeGallery.innerHTML = '';
+            
+            if (codes.length === 0) {
+                emptyState.style.display = 'block';
+                updateStats();
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            codes.forEach(code => {
+                const codeCard = createCodeCard(code);
+                codeGallery.appendChild(codeCard);
+            });
+            
+            updateStats();
+        }
+
+        function createCodeCard(code) {
+            const div = document.createElement('div');
+            div.className = 'code-card p-4 fade-in';
+            div.dataset.codeId = code.id;
+            
+            const languageClass = getLanguageClass(code.language);
+            const languageIcon = getLanguageIcon(code.language);
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-medium text-gray-800">${code.title}</h4>
+                    <span class="language-badge ${languageClass}">
+                        ${languageIcon}
+                        ${code.language.toUpperCase()}
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 mb-2">
+                    <i class="far fa-clock ml-2"></i>
+                    ${formatDate(code.createdAt)}
+                </div>
+                <div class="text-sm text-gray-600 line-clamp-3">
+                    ${getCodePreview(code.code)}
+                </div>
+            `;
+            
+            div.addEventListener('click', () => selectCode(code.id));
+            
+            return div;
+        }
+
+        function selectCode(codeId) {
+            selectedCode = codes.find(c => c.id === codeId);
+            if (!selectedCode) return;
+            
+            document.querySelectorAll('.code-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.codeId == codeId);
+            });
+            
+            displayCode(selectedCode);
+            runCode(selectedCode);
+            
+            codeInfo.innerHTML = `
+                <span class="language-badge ${getLanguageClass(selectedCode.language)}">
+                    ${getLanguageIcon(selectedCode.language)}
+                    ${selectedCode.language.toUpperCase()}
+                </span>
+                <span>${selectedCode.title}</span>
+            `;
+        }
+
+        function displayCode(code) {
+            const languageMap = {
+                'html': 'markup',
+                'css': 'css',
+                'javascript': 'javascript',
+                'mixed': 'markup'
+            };
+            
+            const language = languageMap[code.language] || 'markup';
+            
+            codeDisplay.innerHTML = `
+                <button class="copy-button" onclick="copyCode('${escapeHtml(code.code)}')">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <pre><code class="language-${language}">${escapeHtml(code.code)}</code></pre>
+            `;
+            
+            Prism.highlightElement(codeDisplay.querySelector('code'));
+        }
+
+        function runCode(code) {
+            previewStatus.textContent = translations[currentLanguage].running;
+            previewStatus.className = 'text-sm text-blue-600';
+            
+            const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            
+            if (code.language === 'html' || code.language === 'mixed') {
+                iframeDoc.open();
+                iframeDoc.write(code.code);
+                iframeDoc.close();
+            } else if (code.language === 'css') {
+                iframeDoc.open();
+                iframeDoc.write(`
+                    <!DOCTYPE html>
+                    <html lang="${currentLanguage}" dir="${currentLanguage === 'ar' ? 'rtl' : 'ltr'}">
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>${code.code}</style>
+                    </head>
+                    <body>
+                        <div class="container" style="max-width: 600px; margin: 50px auto; padding: 20px;">
+                            <h1>${translations[currentLanguage].preview} CSS</h1>
+                            <p>${currentLanguage === 'ar' ? 'هذا نص تجريبي لمعاينة تأثيرات CSS' : 'This is a sample text to preview CSS effects'}</p>
+                            <button class="animated-button">${currentLanguage === 'ar' ? 'زر تجريبي' : 'Sample Button'}</button>
+                            <div class="card">
+                                <h2>${currentLanguage === 'ar' ? 'بطاقة تجريبية' : 'Sample Card'}</h2>
+                                <p>${currentLanguage === 'ar' ? 'محتوى البطاقة هنا' : 'Card content here'}</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                iframeDoc.close();
+            } else if (code.language === 'javascript') {
+                iframeDoc.open();
+                iframeDoc.write(`
+                    <!DOCTYPE html>
+                    <html lang="${currentLanguage}" dir="${currentLanguage === 'ar' ? 'rtl' : 'ltr'}">
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>
+                            body { 
+                                font-family: 'Tajawal', 'Inter', sans-serif; 
+                                padding: 20px; 
+                                background: #f5f5f5;
+                            }
+                            #output { 
+                                background: white; 
+                                padding: 20px; 
+                                border-radius: 8px; 
+                                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                            }
+                            .controls { 
+                                margin-bottom: 20px; 
+                                display: flex; 
+                                gap: 10px; 
+                            }
+                            button { 
+                                padding: 8px 16px; 
+                                background: #3b82f6; 
+                                color: white; 
+                                border: none; 
+                                border-radius: 4px; 
+                                cursor: pointer;
+                            }
+                            #counter { 
+                                font-size: 48px; 
+                                font-weight: bold; 
+                                text-align: center; 
+                                margin: 20px 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="controls">
+                            <button id="increase">${currentLanguage === 'ar' ? 'زيادة' : 'Increase'}</button>
+                            <button id="decrease">${currentLanguage === 'ar' ? 'نقصان' : 'Decrease'}</button>
+                            <button id="reset">${currentLanguage === 'ar' ? 'إعادة تعيين' : 'Reset'}</button>
+                        </div>
+                        <div id="counter">0</div>
+                        <div id="output"></div>
+                        
+                        <script>
+                            ${code.code}
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                iframeDoc.close();
+            }
+            
+            setTimeout(() => {
+                previewStatus.textContent = translations[currentLanguage].ran;
+                previewStatus.className = 'text-sm text-green-600';
+            }, 500);
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast(translations[currentLanguage].copied);
+            });
+        }
+
+        function updateStats() {
+            const stats = {
+                total: codes.length,
+                html: codes.filter(c => c.language === 'html').length,
+                css: codes.filter(c => c.language === 'css').length,
+                javascript: codes.filter(c => c.language === 'javascript').length
+            };
+            
+            totalCodesEl.textContent = stats.total;
+            htmlCount.textContent = stats.html;
+            cssCount.textContent = stats.css;
+            jsCount.textContent = stats.javascript;
+        }
+
+        function getLanguageClass(language) {
+            const classes = {
+                'html': 'html-badge',
+                'css': 'css-badge',
+                'javascript': 'js-badge',
+                'mixed': 'mixed-badge'
+            };
+            return classes[language] || 'html-badge';
+        }
+
+        function getLanguageIcon(language) {
+            const icons = {
+                'html': '<i class="fab fa-html5"></i>',
+                'css': '<i class="fab fa-css3-alt"></i>',
+                'javascript': '<i class="fab fa-js-square"></i>',
+                'mixed': '<i class="fas fa-code"></i>'
+            };
+            return icons[language] || '<i class="fas fa-file-code"></i>';
+        }
+
+        function getCodePreview(code) {
+            const lines = code.split('\n').slice(0, 3);
+            return lines.join(' ').replace(/<\/?[^>]+(>|$)/g, '').substring(0, 100) + '...';
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            if (isDarkMode) {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun text-yellow-400"></i>';
+            } else {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon text-gray-600"></i>';
+            }
+            
+            localStorage.setItem('darkMode', isDarkMode);
+        }
+
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return translations[currentLanguage].now;
+            if (minutes < 60) {
+                return translations[currentLanguage].minutesAgo.replace('{minutes}', minutes);
+            }
+            if (hours < 24) {
+                return translations[currentLanguage].hoursAgo.replace('{hours}', hours);
+            }
+            return translations[currentLanguage].daysAgo.replace('{days}', days);
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+        });
+
+        // Initialize
+        initializeLanguage();
+        renderCodeGallery();
+        
+        if (codes.length > 0) {
+            selectCode(codes[0].id);
+        }
+
+        const initialData = localStorage.getItem('codeGallery') || '';
+        localStorage.setItem('codeGalleryHash', btoa(initialData));
+    </script>
+</body>
+</html>
