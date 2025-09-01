@@ -719,6 +719,88 @@
         .copy-link-btn {
             background: #6b7280;
         }
+        
+        /* Subscription Modal Styles */
+        .subscription-content {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .subscription-icon {
+            font-size: 4rem;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+        
+        .subscription-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .subscription-description {
+            margin-bottom: 1.5rem;
+            color: #6b7280;
+        }
+        
+        .dark-mode .subscription-description {
+            color: #9ca3af;
+        }
+        
+        .instagram-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        
+        .instagram-link:hover {
+            transform: scale(1.05);
+        }
+        
+        .code-input-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .code-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+        
+        .dark-mode .code-input {
+            background: #374151;
+            border-color: #4b5563;
+            color: white;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .subscription-error {
+            color: #ef4444;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+        
+        .subscription-error.show {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -894,6 +976,42 @@
             </div>
         </div>
     </main>
+    
+    <!-- Subscription Modal -->
+    <div id="subscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="subscription-content">
+                <i class="fas fa-lock subscription-icon"></i>
+                <h3 class="subscription-title" data-translate="subscriptionRequired">الاشتراك مطلوب</h3>
+                <p class="subscription-description" data-translate="subscriptionDescription">
+                    لمشاركة أو تصدير الكودات، يرجى الاشتراك في حسابنا على إنستغرام وإدخال كود الاشتراك
+                </p>
+                
+                <a href="https://www.instagram.com/codenflow05?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+                   target="_blank" class="instagram-link">
+                    <i class="fab fa-instagram"></i>
+                    تابعنا على إنستغرام
+                </a>
+                
+                <div class="code-input-container">
+                    <input type="text" id="subscriptionCode" class="code-input" 
+                           placeholder="أدخل كود الاشتراك" maxlength="6">
+                    <div id="subscriptionError" class="subscription-error" data-translate="invalidCode">
+                        كود الاشتراك غير صحيح
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-1rem">
+                    <button class="btn btn-primary" onclick="validateSubscription()" data-translate="verify">
+                        تحقق
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeModal('subscriptionModal')" data-translate="cancel">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Share Modal -->
     <div id="shareModal" class="modal">
@@ -1090,7 +1208,11 @@
                 cancel: "إلغاء",
                 linkCopied: "تم نسخ الرابط",
                 codeExported: "تم تصدير الكود",
-                previewOpened: "تم فتح المعاينة في تبويب جديد"
+                previewOpened: "تم فتح المعاينة في تبويب جديد",
+                subscriptionRequired: "الاشتراك مطلوب",
+                subscriptionDescription: "لمشاركة أو تصدير الكودات، يرجى الاشتراك في حسابنا على إنستغرام وإدخال كود الاشتراك",
+                invalidCode: "كود الاشتراك غير صحيح",
+                verify: "تحقق"
             },
             en: {
                 title: "Code Gallery - معرض الكودات",
@@ -1150,7 +1272,11 @@
                 cancel: "Cancel",
                 linkCopied: "Link copied",
                 codeExported: "Code exported",
-                previewOpened: "Preview opened in new tab"
+                previewOpened: "Preview opened in new tab",
+                subscriptionRequired: "Subscription Required",
+                subscriptionDescription: "To share or export codes, please subscribe to our Instagram account and enter the subscription code",
+                invalidCode: "Invalid subscription code",
+                verify: "Verify"
             }
         };
         
@@ -1163,6 +1289,8 @@
         let syncInterval;
         let currentFilter = 'all';
         let searchQuery = '';
+        let isSubscribed = false;
+        let pendingAction = null;
         
         // DOM Elements
         const codeGallery = document.getElementById('codeGallery');
@@ -1192,6 +1320,9 @@
         const fullscreenCodeContainer = document.getElementById('fullscreenCodeContainer');
         const fullscreenCodeTitle = document.getElementById('fullscreenCodeTitle');
         const fullscreenTitle = document.getElementById('fullscreenTitle');
+        const subscriptionModal = document.getElementById('subscriptionModal');
+        const subscriptionCode = document.getElementById('subscriptionCode');
+        const subscriptionError = document.getElementById('subscriptionError');
         
         // Stats elements
         const totalCodesEl = document.getElementById('totalCodes');
@@ -1263,12 +1394,22 @@
         });
         shareCodeBtn.addEventListener('click', () => {
             if (selectedCode) {
-                openModal('shareModal');
+                pendingAction = 'share';
+                if (isSubscribed) {
+                    openModal('shareModal');
+                } else {
+                    openModal('subscriptionModal');
+                }
             }
         });
         exportCodeBtn.addEventListener('click', () => {
             if (selectedCode) {
-                openModal('exportModal');
+                pendingAction = 'export';
+                if (isSubscribed) {
+                    openModal('exportModal');
+                } else {
+                    openModal('subscriptionModal');
+                }
             }
         });
         fullscreenCodeBtn.addEventListener('click', () => {
@@ -1690,6 +1831,12 @@
         // Modal functions
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('show');
+            
+            // Reset subscription modal when opened
+            if (modalId === 'subscriptionModal') {
+                subscriptionCode.value = '';
+                subscriptionError.classList.remove('show');
+            }
         }
         
         function closeModal(modalId) {
@@ -1726,7 +1873,12 @@
         
         function exportFullscreenCode() {
             if (selectedCode) {
-                openModal('exportModal');
+                pendingAction = 'export';
+                if (isSubscribed) {
+                    openModal('exportModal');
+                } else {
+                    openModal('subscriptionModal');
+                }
             }
         }
         
@@ -1880,6 +2032,35 @@
             
             showToast(translations[currentLanguage].previewOpened);
         }
+        
+        // Subscription validation
+        function validateSubscription() {
+            const code = subscriptionCode.value.trim();
+            
+            if (code === '114119') {
+                isSubscribed = true;
+                closeModal('subscriptionModal');
+                
+                // Execute the pending action
+                if (pendingAction === 'share') {
+                    openModal('shareModal');
+                } else if (pendingAction === 'export') {
+                    openModal('exportModal');
+                }
+                
+                pendingAction = null;
+            } else {
+                subscriptionError.classList.add('show');
+                subscriptionCode.focus();
+            }
+        }
+        
+        // Handle Enter key in subscription code input
+        subscriptionCode.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                validateSubscription();
+            }
+        });
         
         window.addEventListener('beforeunload', () => {
             if (syncInterval) {
