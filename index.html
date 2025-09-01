@@ -741,6 +741,7 @@
         .subscription-description {
             margin-bottom: 1.5rem;
             color: #6b7280;
+            line-height: 1.6;
         }
         
         .dark-mode .subscription-description {
@@ -763,6 +764,30 @@
         
         .instagram-link:hover {
             transform: scale(1.05);
+        }
+        
+        .code-instruction {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #0c4a6e;
+        }
+        
+        .dark-mode .code-instruction {
+            background: #082f49;
+            border-color: #0284c7;
+            color: #e0f2fe;
+        }
+        
+        .code-instruction-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
         
         .code-input-container {
@@ -800,6 +825,41 @@
         
         .subscription-error.show {
             display: block;
+        }
+        
+        .subscription-steps {
+            text-align: right;
+            margin-bottom: 1.5rem;
+            color: #6b7280;
+        }
+        
+        .dark-mode .subscription-steps {
+            color: #9ca3af;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-text {
+            flex: 1;
         }
     </style>
 </head>
@@ -984,8 +1044,23 @@
                 <i class="fas fa-lock subscription-icon"></i>
                 <h3 class="subscription-title" data-translate="subscriptionRequired">الاشتراك مطلوب</h3>
                 <p class="subscription-description" data-translate="subscriptionDescription">
-                    لمشاركة أو تصدير الكودات، يرجى الاشتراك في حسابنا على إنستغرام وإدخال كود الاشتراك
+                    للوصول إلى ميزات النسخ والمشاركة والتصدير، يرجى اتباع الخطوات التالية:
                 </p>
+                
+                <div class="subscription-steps">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-text" data-translate="step1">تابع حسابنا على إنستغرام</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-text" data-translate="step2">اطلب كود الاشتراك من صاحب الحساب</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-text" data-translate="step3">أدخل كود الاشتراك في الحقل أدناه</div>
+                    </div>
+                </div>
                 
                 <a href="https://www.instagram.com/codenflow05?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
                    target="_blank" class="instagram-link">
@@ -993,9 +1068,19 @@
                     تابعنا على إنستغرام
                 </a>
                 
+                <div class="code-instruction">
+                    <div class="code-instruction-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span data-translate="codeInstructionTitle">ملاحظة هامة</span>
+                    </div>
+                    <p data-translate="codeInstruction">
+                        كود الاشتراك سيعطيك إياه صاحب الحساب بعد متابعته. لا يمكن مشاركة أو تصدير الكودات بدون كود اشتراك صحيح.
+                    </p>
+                </div>
+                
                 <div class="code-input-container">
                     <input type="text" id="subscriptionCode" class="code-input" 
-                           placeholder="أدخل كود الاشتراك" maxlength="6">
+                           placeholder="أدخل كود الاشتراك الذي سيعطيك إياه صاحب الحساب" maxlength="6">
                     <div id="subscriptionError" class="subscription-error" data-translate="invalidCode">
                         كود الاشتراك غير صحيح
                     </div>
@@ -1210,7 +1295,12 @@
                 codeExported: "تم تصدير الكود",
                 previewOpened: "تم فتح المعاينة في تبويب جديد",
                 subscriptionRequired: "الاشتراك مطلوب",
-                subscriptionDescription: "لمشاركة أو تصدير الكودات، يرجى الاشتراك في حسابنا على إنستغرام وإدخال كود الاشتراك",
+                subscriptionDescription: "للوصول إلى ميزات النسخ والمشاركة والتصدير، يرجى اتباع الخطوات التالية:",
+                step1: "تابع حسابنا على إنستغرام",
+                step2: "اطلب كود الاشتراك من صاحب الحساب",
+                step3: "أدخل كود الاشتراك في الحقل أدناه",
+                codeInstructionTitle: "ملاحظة هامة",
+                codeInstruction: "كود الاشتراك سيعطيك إياه صاحب الحساب بعد متابعته. لا يمكن مشاركة أو تصدير الكودات بدون كود اشتراك صحيح.",
                 invalidCode: "كود الاشتراك غير صحيح",
                 verify: "تحقق"
             },
@@ -1274,7 +1364,12 @@
                 codeExported: "Code exported",
                 previewOpened: "Preview opened in new tab",
                 subscriptionRequired: "Subscription Required",
-                subscriptionDescription: "To share or export codes, please subscribe to our Instagram account and enter the subscription code",
+                subscriptionDescription: "To access copy, share, and export features, please follow these steps:",
+                step1: "Follow our Instagram account",
+                step2: "Request the subscription code from the account owner",
+                step3: "Enter the subscription code in the field below",
+                codeInstructionTitle: "Important Note",
+                codeInstruction: "The subscription code will be given to you by the account owner after following. You cannot share or export codes without a valid subscription code.",
                 invalidCode: "Invalid subscription code",
                 verify: "Verify"
             }
@@ -1389,7 +1484,12 @@
         searchInput.addEventListener('input', handleSearch);
         copyCodeBtn.addEventListener('click', () => {
             if (selectedCode) {
-                copyCode(selectedCode.code);
+                pendingAction = 'copy';
+                if (isSubscribed) {
+                    copyCode(selectedCode.code);
+                } else {
+                    openModal('subscriptionModal');
+                }
             }
         });
         shareCodeBtn.addEventListener('click', () => {
@@ -1630,7 +1730,7 @@
             const language = languageMap[code.language] || 'markup';
             
             codeDisplay.innerHTML = `
-                <button class="copy-button" onclick="copyCode('${escapeHtml(code.code)}')">
+                <button class="copy-button" onclick="handleCopyButtonClick('${escapeHtml(code.code)}')">
                     <i class="fas fa-copy"></i>
                 </button>
                 <pre><code class="language-${language}">${escapeHtml(code.code)}</code></pre>
@@ -1734,6 +1834,15 @@
                 previewStatus.textContent = translations[currentLanguage].ran;
                 previewStatus.className = 'text-sm text-green-600';
             }, 500);
+        }
+        
+        function handleCopyButtonClick(code) {
+            pendingAction = 'copy';
+            if (isSubscribed) {
+                copyCode(code);
+            } else {
+                openModal('subscriptionModal');
+            }
         }
         
         function copyCode(code) {
@@ -1867,7 +1976,12 @@
         
         function copyFullscreenCode() {
             if (selectedCode) {
-                copyCode(selectedCode.code);
+                pendingAction = 'copy';
+                if (isSubscribed) {
+                    copyCode(selectedCode.code);
+                } else {
+                    openModal('subscriptionModal');
+                }
             }
         }
         
@@ -2042,7 +2156,9 @@
                 closeModal('subscriptionModal');
                 
                 // Execute the pending action
-                if (pendingAction === 'share') {
+                if (pendingAction === 'copy') {
+                    copyCode(selectedCode.code);
+                } else if (pendingAction === 'share') {
                     openModal('shareModal');
                 } else if (pendingAction === 'export') {
                     openModal('exportModal');
