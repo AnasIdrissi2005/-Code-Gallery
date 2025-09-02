@@ -83,6 +83,10 @@
             border-radius: 0.5rem;
             overflow: hidden;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .dark-mode .code-display {
@@ -625,6 +629,10 @@
             overflow: hidden;
             position: relative;
             max-height: 70vh;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .dark-mode .fullscreen-code {
@@ -860,6 +868,17 @@
         
         .step-text {
             flex: 1;
+        }
+        
+        /* Disable text selection for code display */
+        .code-display pre,
+        .code-display code,
+        .fullscreen-code pre,
+        .fullscreen-code code {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
     </style>
 </head>
