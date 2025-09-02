@@ -880,6 +880,43 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
+        
+        /* Connection status indicator */
+        .connection-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+        
+        .connection-status.connected {
+            background: #10b981;
+            color: white;
+        }
+        
+        .connection-status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .connection-status.connecting {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .connection-status i {
+            animation: spin 1s linear infinite;
+        }
+        
+        .connection-status.connected i {
+            animation: none;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -906,11 +943,19 @@
             </div>
         </div>
     </header>
+    
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status connecting">
+        <i class="fas fa-sync-alt"></i>
+        <span data-translate="connecting">جاري الاتصال...</span>
+    </div>
+    
     <!-- Sync Indicator -->
     <div id="syncIndicator" class="sync-indicator">
         <i class="fas fa-sync-alt"></i>
         <span data-translate="syncing">جاري تحديث البيانات...</span>
     </div>
+    
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-6">
         <!-- Stats Section -->
@@ -1252,12 +1297,18 @@
     </div>
     
     <script>
+        // Google Sheets Configuration
+        const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9VFK3Vl5QOFVAeTVI1vCSxjvP-o0OhX1UOWPZjsyAEBzK6pG-k88MnFSSsFrfiJR30tXbuYxAL00-/pub?gid=1792718204&single=true&output=csv';
+        
         // Translations
         const translations = {
             ar: {
                 title: "معرض الكودات - Code Gallery",
                 mainTitle: "معرض الكودات",
                 syncing: "جاري تحديث البيانات...",
+                connecting: "جاري الاتصال...",
+                connected: "متصل",
+                disconnected: "غير متصل",
                 totalCodes: "إجمالي الكودات",
                 codeGallery: "معرض الكودات",
                 noCodes: "لا توجد كودات",
@@ -1327,6 +1378,9 @@
                 title: "Code Gallery - معرض الكودات",
                 mainTitle: "Code Gallery",
                 syncing: "Updating data...",
+                connecting: "Connecting...",
+                connected: "Connected",
+                disconnected: "Disconnected",
                 totalCodes: "Total Codes",
                 codeGallery: "Code Gallery",
                 noCodes: "No codes available",
@@ -1395,7 +1449,7 @@
         };
         
         // Initialize
-        let codes = JSON.parse(localStorage.getItem('codeGallery')) || [];
+        let codes = [];
         let selectedCode = null;
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
         let currentLanguage = localStorage.getItem('language') || 'ar';
@@ -1405,6 +1459,7 @@
         let searchQuery = '';
         let isSubscribed = false;
         let pendingAction = null;
+        let isConnected = false;
         
         // DOM Elements
         const codeGallery = document.getElementById('codeGallery');
@@ -1419,6 +1474,7 @@
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         const syncIndicator = document.getElementById('syncIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
         const searchInput = document.getElementById('searchInput');
         const codeTools = document.getElementById('codeTools');
         const previewTools = document.getElementById('previewTools');
@@ -1557,80 +1613,137 @@
             });
         });
         
+        // Fetch data from Google Sheets
+        async function fetchCodesFromSheets() {
+            try {
+                updateConnectionStatus('connecting');
+                
+                const response = await fetch(SHEETS_URL);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                
+                const csvData = await response.text();
+                const parsedData = parseCSV(csvData);
+                
+                // Convert CSV data to code objects
+                const newCodes = parsedData.map((row, index) => ({
+                    id: row.id || `code_${index}`,
+                    title: row.title || '',
+                    code: row.code || '',
+                    language: row.language || 'html',
+                    description: row.description || '',
+                    createdAt: row.createdAt || new Date().toISOString()
+                }));
+                
+                updateConnectionStatus('connected');
+                return newCodes;
+            } catch (error) {
+                console.error('Error fetching data from Google Sheets:', error);
+                updateConnectionStatus('disconnected');
+                showToast(translations[currentLanguage].error, 'error');
+                return [];
+            }
+        }
+        
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            const headers = lines[0].split(',').map(header => header.trim());
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    const obj = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        // Remove quotes if present
+                        let value = values[j].trim();
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        obj[headers[j]] = value;
+                    }
+                    result.push(obj);
+                }
+            }
+            
+            return result;
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(status) {
+            isConnected = status === 'connected';
+            connectionStatus.className = `connection-status ${status}`;
+            
+            const statusText = connectionStatus.querySelector('span');
+            statusText.textContent = translations[currentLanguage][status];
+            
+            const statusIcon = connectionStatus.querySelector('i');
+            if (status === 'connected') {
+                statusIcon.className = 'fas fa-check-circle';
+            } else if (status === 'disconnected') {
+                statusIcon.className = 'fas fa-exclamation-circle';
+            } else {
+                statusIcon.className = 'fas fa-sync-alt';
+            }
+        }
+        
         // Sync Mechanisms
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'codeGallery') {
-                refreshData();
-            }
-        });
-        
-        window.addEventListener('focus', () => {
-            refreshData();
-        });
-        
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                refreshData();
-            }
-        });
-        
         syncInterval = setInterval(() => {
             checkForUpdates();
-        }, 2000);
+        }, 30000); // Check for updates every 30 seconds
         
         window.addEventListener('adminUpdate', (e) => {
             refreshData();
         });
         
         // Functions
-        function checkForUpdates() {
+        async function checkForUpdates() {
+            if (!isConnected) return;
+            
             try {
-                const currentData = localStorage.getItem('codeGallery');
-                const currentHash = btoa(currentData || '');
-                const storedHash = localStorage.getItem('codeGalleryHash') || '';
+                const newCodes = await fetchCodesFromSheets();
                 
-                if (currentHash !== storedHash) {
+                if (JSON.stringify(newCodes) !== JSON.stringify(codes)) {
                     refreshData();
-                    localStorage.setItem('codeGalleryHash', currentHash);
                 }
             } catch (error) {
                 console.error('Error checking for updates:', error);
             }
         }
         
-        function refreshData() {
+        async function refreshData() {
             showSyncIndicator();
             
-            setTimeout(() => {
-                try {
-                    const newCodes = JSON.parse(localStorage.getItem('codeGallery')) || [];
-                    
-                    if (JSON.stringify(newCodes) !== JSON.stringify(codes)) {
-                        codes = newCodes;
-                        filterCodes();
-                        
-                        if (selectedCode) {
-                            const stillExists = codes.find(c => c.id === selectedCode.id);
-                            if (stillExists) {
-                                selectCode(selectedCode.id);
-                            } else {
-                                if (codes.length > 0) {
-                                    selectCode(codes[0].id);
-                                }
-                            }
-                        } else if (codes.length > 0) {
-                            selectCode(codes[0].id);
-                        }
-                        
-                        showToast(translations[currentLanguage].updated);
-                    }
-                } catch (error) {
-                    console.error('Error refreshing data:', error);
-                    showToast(translations[currentLanguage].error, 'error');
-                }
+            try {
+                const newCodes = await fetchCodesFromSheets();
                 
-                hideSyncIndicator();
-            }, 500);
+                if (JSON.stringify(newCodes) !== JSON.stringify(codes)) {
+                    codes = newCodes;
+                    filterCodes();
+                    
+                    if (selectedCode) {
+                        const stillExists = codes.find(c => c.id === selectedCode.id);
+                        if (stillExists) {
+                            selectCode(selectedCode.id);
+                        } else {
+                            if (codes.length > 0) {
+                                selectCode(codes[0].id);
+                            }
+                        }
+                    } else if (codes.length > 0) {
+                        selectCode(codes[0].id);
+                    }
+                    
+                    showToast(translations[currentLanguage].updated);
+                }
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showToast(translations[currentLanguage].error, 'error');
+            }
+            
+            hideSyncIndicator();
         }
         
         function forceRefresh() {
@@ -2205,14 +2318,14 @@
         
         // Initialize
         initializeLanguage();
-        renderCodeGallery();
         
-        if (codes.length > 0) {
-            selectCode(codes[0].id);
-        }
+        // Initial data load
+        refreshData();
         
-        const initialData = localStorage.getItem('codeGallery') || '';
-        localStorage.setItem('codeGalleryHash', btoa(initialData));
+        // Set up periodic refresh
+        setInterval(() => {
+            refreshData();
+        }, 5 * 60 * 1000); // Refresh every 5 minutes
     </script>
 </body>
 </html>
