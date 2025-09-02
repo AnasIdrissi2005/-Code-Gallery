@@ -917,6 +917,29 @@
         .connection-status.connected i {
             animation: none;
         }
+        
+        /* Loading spinner for code content */
+        .code-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .code-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .code-loading-text {
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -1460,6 +1483,7 @@
         let isSubscribed = false;
         let pendingAction = null;
         let isConnected = false;
+        let codeCache = {}; // Cache for loaded code content
         
         // DOM Elements
         const codeGallery = document.getElementById('codeGallery');
@@ -1630,7 +1654,7 @@
                 const newCodes = parsedData.map((row, index) => ({
                     id: row.id || `code_${index}`,
                     title: row.title || '',
-                    code: row.code || '',
+                    fileUrl: row.fileUrl || '', // New field for file URL
                     language: row.language || 'html',
                     description: row.description || '',
                     createdAt: row.createdAt || new Date().toISOString()
@@ -1643,6 +1667,36 @@
                 updateConnectionStatus('disconnected');
                 showToast(translations[currentLanguage].error, 'error');
                 return [];
+            }
+        }
+        
+        // Fetch code content from file URL
+        async function fetchCodeContent(fileUrl) {
+            try {
+                // Check if the code is already cached
+                if (codeCache[fileUrl]) {
+                    return codeCache[fileUrl];
+                }
+                
+                showSyncIndicator();
+                
+                const response = await fetch(fileUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch code content');
+                }
+                
+                const codeContent = await response.text();
+                
+                // Cache the code content
+                codeCache[fileUrl] = codeContent;
+                
+                hideSyncIndicator();
+                return codeContent;
+            } catch (error) {
+                console.error('Error fetching code content:', error);
+                hideSyncIndicator();
+                showToast(translations[currentLanguage].error, 'error');
+                return '';
             }
         }
         
@@ -1771,7 +1825,6 @@
                 const matchesFilter = currentFilter === 'all' || code.language === currentFilter;
                 const matchesSearch = searchQuery === '' || 
                     code.title.toLowerCase().includes(searchQuery) || 
-                    code.code.toLowerCase().includes(searchQuery) ||
                     (code.description && code.description.toLowerCase().includes(searchQuery));
                 
                 return matchesFilter && matchesSearch;
@@ -1819,7 +1872,7 @@
                     ${formatDate(code.createdAt)}
                 </div>
                 <div class="text-sm text-gray-600 line-clamp-3">
-                    ${getCodePreview(code.code)}
+                    ${code.description || 'لا يوجد وصف'}
                 </div>
             `;
             
@@ -1828,7 +1881,7 @@
             return div;
         }
         
-        function selectCode(codeId) {
+        async function selectCode(codeId) {
             selectedCode = codes.find(c => c.id === codeId);
             if (!selectedCode) return;
             
@@ -1836,6 +1889,22 @@
                 card.classList.toggle('active', card.dataset.codeId == codeId);
             });
             
+            // Show loading state
+            codeDisplay.innerHTML = `
+                <div class="code-loading">
+                    <div class="code-loading-spinner"></div>
+                    <div class="code-loading-text" data-translate="loading">جاري تحميل الكود...</div>
+                </div>
+            `;
+            updateTranslations();
+            
+            // Fetch code content from file URL
+            const codeContent = await fetchCodeContent(selectedCode.fileUrl);
+            
+            // Update selected code with the fetched content
+            selectedCode.code = codeContent;
+            
+            // Display the code
             displayCode(selectedCode);
             runCode(selectedCode);
             
@@ -2015,11 +2084,6 @@
                 'mixed': '<i class="fas fa-code"></i>'
             };
             return icons[language] || '<i class="fas fa-file-code"></i>';
-        }
-        
-        function getCodePreview(code) {
-            const lines = code.split('\n').slice(0, 3);
-            return lines.join(' ').replace(/<\/?[^>]+(>|$)/g, '').substring(0, 100) + '...';
         }
         
         function toggleDarkMode() {
